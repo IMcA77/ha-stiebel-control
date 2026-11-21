@@ -37,86 +37,98 @@
 #include "signal_requests_base.h"
 
 extern const SignalRequest signalRequests[] = {
-    SIGNAL_REQUESTS_BASE   // date/time, EVU lock, operating mode, energy counters
+    SIGNAL_REQUESTS_BASE   // date/time, EVU lock, operating mode
 
     // ========================================================================
-    // WPC7-SPECIFIC: signals queried from KESSEL (0x180)
+    // KESSEL (0x180): Live Temperatures, Flow, Pressures & Pumps
     // ========================================================================
-    {"AUSSENTEMP",                 FREQ_30S,   cm_kessel},
-    {"SPEICHERSOLLTEMP",           FREQ_30S,   cm_kessel},
-    {"SPEICHERISTTEMP",            FREQ_30S,   cm_kessel},
-    {"RUECKLAUFISTTEMP",           FREQ_30S,   cm_kessel},
-    {"QUELLE_IST",                 FREQ_30S,   cm_kessel},
-    {"HEISSGAS_TEMP",              FREQ_1MIN,  cm_kessel},
-    {"WW_HYSTERESE",               FREQ_10MIN, cm_kessel},
-    // -255 on real WPC7 (EnderBow, PR #27): {"VOLUMENSTROM_WPC7",          FREQ_30S,   cm_kessel},
-    // -255 on real WPC7 (EnderBow, PR #27): {"DRUCK_HEIZKREIS",            FREQ_30S,   cm_kessel},
-    // -255 on real WPC7 (EnderBow, PR #27): {"QUELLENDRUCK",               FREQ_30S,   cm_kessel},
-    {"KUEHLEN_EINGESCHALTET",      FREQ_1MIN,  cm_kessel},
-    // -255 on real WPC7 (EnderBow, PR #27): {"LEISTUNG_HEIZKREISPUMPE",    FREQ_1MIN,  cm_kessel},
-    // -255 on real WPC7 (EnderBow, PR #27): {"LEISTUNG_WARMWASSERPUMPE",   FREQ_1MIN,  cm_kessel},
-    // -255 on real WPC7 (EnderBow, PR #27): {"LEISTUNG_SOLEPUMPE",         FREQ_1MIN,  cm_kessel},
-    {"EINPHASIGER_BETRIEB",        FREQ_10MIN, cm_kessel},
-    {"VERDICHTER_STARTS",          FREQ_10MIN, cm_kessel},
-    {"VERDICHTER_STARTS_K",        FREQ_10MIN, cm_kessel},
-    {"VERDICHTER_STILLSTAND",      FREQ_1MIN,  cm_kessel},
-    {"REGLERDYNAMIK",              FREQ_10MIN, cm_kessel},
-    {"BETRIEBS_STATUS_WPC7",       FREQ_30S,   cm_kessel},  // bitmask register, see header comment
-    {"PROGRAMMSCHALTER",           FREQ_10MIN, cm_kessel},  // source project targets Kessel; base already queries cm_manager too
-
-    // ========================================================================
-    // Confirmed working on real WPC7 hardware — corroborated against
-    // EnderBow's tested fork (github.com/EnderBow/ha-stiebel-control-wpc7,
-    // referenced in PR #27 comments)
-    // ========================================================================
-    {"BETRIEBSART_WP",             FREQ_1MIN,  cm_manager},
-    {"RAUMSOLLTEMP_I",             FREQ_10MIN, cm_manager},
-    {"RAUMSOLLTEMP_II",            FREQ_10MIN, cm_manager},
-    {"RAUMSOLLTEMP_III",           FREQ_10MIN, cm_manager},
-    {"RAUMSOLLTEMP_NACHT",         FREQ_10MIN, cm_manager},
-    {"WW_ECO",                     FREQ_10MIN, cm_manager},
-    {"ANTILEGIONELLEN",            FREQ_10MIN, cm_manager},
-    {"QUELLENSOLLTEMPERATUR",      FREQ_10MIN, cm_manager},  // confirmed on manager; see also cm_kessel guess below
-    {"WPVORLAUFIST",               FREQ_30S,   cm_kessel},
-    {"WP_PUMPENSTATUS",            FREQ_30S,   cm_kessel},
-
-    // Index matches an existing ElsterTable row but the source project
-    // documents a different Type — reusing the existing row as-is (see
-    // header comment). Values may be mis-scaled until verified.
-    {"MAX_WASSERDRUCK",            FREQ_10MIN, cm_kessel},  // TTF07c: HDSENSORMAX, et_dec_val expected (row has et_default)
-    {"MASCHINENDRUCK",             FREQ_30S,   cm_kessel},  // TTF07c: DRUCK_HOCHDRUCK, et_cent_val expected (row has et_default)
-    // -255 on real WPC7 (EnderBow, PR #27): {"MATERIALNUMMER_HIGH",        FREQ_30S,   cm_kessel},  // TTF07c: HKISTTEMP, et_dec_val expected (row has et_default) — name mismatch too, low confidence
-    // -255 on real WPC7 (EnderBow, PR #27): {"MESSSTROM_NIEDERDRUCK",      FREQ_30S,   cm_kessel},  // TTF07c: DRUCK_NIEDERDRUCK, et_cent_val expected (row has et_default)
-
-    // Index + Type match an existing row, name differs — same underlying
-    // Elster signal, just curated under a different name already.
-    // -255 on real WPC7 (EnderBow, PR #27): {"PUFFERTEMP_UNTEN1",          FREQ_1MIN,  cm_kessel},  // TTF07c: PUFFERISTTEMP
-    {"PUFFERSOLL",                 FREQ_1MIN,  cm_kessel},  // TTF07c: PUFFERSOLLTEMP
-    {"MAX_HEIZUNG_TEMP",           FREQ_10MIN, cm_kessel},  // TTF07c: MAXVORLAUFTEMP — not queried by source YAML, untested guess
-    {"HILFSKESSELSOLL",            FREQ_1MIN,  cm_kessel},  // TTF07c: HKSOLLTEMP
-    {"QUELLENSOLLTEMPERATUR",      FREQ_1MIN,  cm_kessel},  // TTF07c: QUELLENTEMP_MIN
-    {"AUSSEN_FROSTTEMP",           FREQ_10MIN, cm_kessel},  // TTF07c: ANLAGENFROST — not queried by source YAML, untested guess
-    {"WP_STATUS",                  FREQ_10MIN, cm_kessel},  // TTF07c: QUELLENMEDIUM, et_byte expected (row has et_little_endian) — not queried by source YAML, untested guess
-
-    // Writable controls already wired up generically in common.yaml —
-    // querying them here makes the existing number entities work on WPC7.
-    {"EINSTELL_SPEICHERSOLLTEMP",  FREQ_30S,   cm_kessel},  // TTF07c: WW_KOMF_TEMP — not queried by source YAML, untested guess
-    {"EINSTELL_SPEICHERSOLLTEMP",  FREQ_30S,   cm_manager},
-    {"EINSTELL_SPEICHERSOLLTEMP2", FREQ_30S,   cm_kessel},  // TTF07c: WW_ECO_TEMP — not queried by source YAML, untested guess
-    {"EINSTELL_SPEICHERSOLLTEMP2", FREQ_30S,   cm_manager},
-
-    // Same Elster index as HEIZKURVE (0x010e) — TTF07c calls it STEIGUNG_HK1
-    {"HEIZKURVE",                  FREQ_10MIN, cm_bedienmodul_2},
+    {"FEHLERMELDUNG",              FREQ_1MIN,  cm_kessel},  // 0x0001
+    {"SPEICHERSOLLTEMP",           FREQ_30S,   cm_kessel},  // 0x0003
+    {"AUSSENTEMP",                 FREQ_30S,   cm_kessel},  // 0x000c
+    {"SPEICHERISTTEMP",            FREQ_30S,   cm_kessel},  // 0x000e
+    {"RUECKLAUFISTTEMP",           FREQ_30S,   cm_kessel},  // 0x0016
+    {"HZK_PUMPE",                  FREQ_30S,   cm_kessel},  // 0x0053
+    {"HEIZKREIS_STATUS",           FREQ_30S,   cm_kessel},  // 0x0059
+    {"SPEICHER_STATUS",            FREQ_30S,   cm_kessel},  // 0x005a
+    {"ABTAUUNGAKTIV",              FREQ_1MIN,  cm_kessel},  // 0x0061
+    {"QUELLE_IST",                 FREQ_30S,   cm_kessel},  // 0x01d4
+    {"WPVORLAUFIST",               FREQ_30S,   cm_kessel},  // 0x01d6
+    {"HILFSKESSELSOLL",            FREQ_1MIN,  cm_kessel},  // 0x01d7
+    {"MAX_HEIZUNG_TEMP",           FREQ_10MIN, cm_kessel},  // 0x01e8
+    {"HEISSGAS_TEMP",              FREQ_30S,   cm_kessel},  // 0x0265
+    {"MASCHINENDRUCK",             FREQ_30S,   cm_kessel},  // 0x0268
+    {"VOLUMENSTROM_WPC7",          FREQ_30S,   cm_kessel},  // 0x0673
+    {"DRUCK_HEIZKREIS",            FREQ_1MIN,  cm_kessel},  // 0x0674
+    {"QUELLENDRUCK",               FREQ_1MIN,  cm_kessel},  // 0x0675
+    {"VORLAUFISTTEMP_WPC7",        FREQ_30S,   cm_kessel},  // 0x06a1
+    {"KUEHLEN_EINGESCHALTET",      FREQ_1MIN,  cm_kessel},  // 0x06aa
+    {"LEISTUNG_HEIZKREISPUMPE",    FREQ_1MIN,  cm_kessel},  // 0x070a
+    {"LEISTUNG_WARMWASSERPUMPE",   FREQ_1MIN,  cm_kessel},  // 0x070b
+    {"LEISTUNG_SOLEPUMPE",         FREQ_1MIN,  cm_kessel},  // 0x070c
+    {"EINPHASIGER_BETRIEB",        FREQ_10MIN, cm_kessel},  // 0x070e
+    {"MESSSTROM_HOCHDRUCK",        FREQ_1MIN,  cm_kessel},  // 0x07a4
+    {"MESSSTROM_NIEDERDRUCK",      FREQ_1MIN,  cm_kessel},  // 0x07a5
+    {"AUSSEN_FROSTTEMP",           FREQ_10MIN, cm_kessel},  // 0x0a00
+    {"WP_PUMPENSTATUS",            FREQ_30S,   cm_kessel},  // 0xfdad
+    {"WP_STATUS",                  FREQ_30S,   cm_kessel},  // 0xfdae
 
     // ========================================================================
-    // WPC7-SPECIFIC: signals queried from HK1 / BEDIENMODUL_2 (0x301)
+    // KESSEL (0x180): Runtimes & Energy Counters (enables COP calculations)
     // ========================================================================
-    // -255 on real WPC7 (EnderBow, PR #27): {"VORLAUFISTTEMP_WPC7",        FREQ_30S,   cm_bedienmodul_2},
+    {"LAUFZEIT_DHC1",              FREQ_10MIN, cm_kessel},  // 0x0259
+    {"LAUFZEIT_DHC2",              FREQ_10MIN, cm_kessel},  // 0x025a
+    {"LZ_VERD_1_HEIZBETRIEB",      FREQ_10MIN, cm_kessel},  // 0x07fc
+    {"LZ_VERD_1_WW_BETRIEB",       FREQ_10MIN, cm_kessel},  // 0x0802
+    {"LZ_DHC12",                   FREQ_10MIN, cm_kessel},  // 0x0805
+    {"EL_AUFNAHMELEISTUNG_WW_TAG_WH",    FREQ_10MIN, cm_kessel},  // 0x091a
+    {"EL_AUFNAHMELEISTUNG_WW_TAG_KWH",   FREQ_10MIN, cm_kessel},  // 0x091b
+    {"EL_AUFNAHMELEISTUNG_WW_SUM_KWH",   FREQ_10MIN, cm_kessel},  // 0x091c
+    {"EL_AUFNAHMELEISTUNG_WW_SUM_MWH",   FREQ_10MIN, cm_kessel},  // 0x091d
+    {"EL_AUFNAHMELEISTUNG_HEIZ_TAG_WH",  FREQ_10MIN, cm_kessel},  // 0x091e
+    {"EL_AUFNAHMELEISTUNG_HEIZ_TAG_KWH", FREQ_10MIN, cm_kessel},  // 0x091f
+    {"EL_AUFNAHMELEISTUNG_HEIZ_SUM_KWH", FREQ_10MIN, cm_kessel},  // 0x0920
+    {"EL_AUFNAHMELEISTUNG_HEIZ_SUM_MWH", FREQ_10MIN, cm_kessel},  // 0x0921
+    {"WAERMEERTRAG_2WE_WW_TAG_WH",       FREQ_10MIN, cm_kessel},  // 0x0922
+    {"WAERMEERTRAG_2WE_WW_TAG_KWH",      FREQ_10MIN, cm_kessel},  // 0x0923
+    {"WAERMEERTRAG_2WE_WW_SUM_KWH",      FREQ_10MIN, cm_kessel},  // 0x0924
+    {"WAERMEERTRAG_2WE_WW_SUM_MWH",      FREQ_10MIN, cm_kessel},  // 0x0925
+    {"WAERMEERTRAG_2WE_HEIZ_TAG_WH",     FREQ_10MIN, cm_kessel},  // 0x0926
+    {"WAERMEERTRAG_2WE_HEIZ_TAG_KWH",    FREQ_10MIN, cm_kessel},  // 0x0927
+    {"WAERMEERTRAG_2WE_HEIZ_SUM_KWH",    FREQ_10MIN, cm_kessel},  // 0x0928
+    {"WAERMEERTRAG_2WE_HEIZ_SUM_MWH",    FREQ_10MIN, cm_kessel},  // 0x0929
+    {"WAERMEERTRAG_WW_TAG_WH",           FREQ_10MIN, cm_kessel},  // 0x092a
+    {"WAERMEERTRAG_WW_TAG_KWH",          FREQ_10MIN, cm_kessel},  // 0x092b
+    {"WAERMEERTRAG_WW_SUM_KWH",          FREQ_10MIN, cm_kessel},  // 0x092c
+    {"WAERMEERTRAG_WW_SUM_MWH",          FREQ_10MIN, cm_kessel},  // 0x092d
+    {"WAERMEERTRAG_HEIZ_TAG_WH",         FREQ_10MIN, cm_kessel},  // 0x092e
+    {"WAERMEERTRAG_HEIZ_TAG_KWH",        FREQ_10MIN, cm_kessel},  // 0x092f
+    {"WAERMEERTRAG_HEIZ_SUM_KWH",        FREQ_10MIN, cm_kessel},  // 0x0930
+    {"WAERMEERTRAG_HEIZ_SUM_MWH",        FREQ_10MIN, cm_kessel},  // 0x0931
+
+    // ========================================================================
+    // MANAGER (WPM): Setpoints, Heating Curve & Grid/Auxiliary States
+    // ========================================================================
+    {"RAUMSOLLTEMP_I",             FREQ_1MIN,  cm_manager},  // 0x0005
+    {"RAUMSOLLTEMP_II",            FREQ_10MIN, cm_manager},  // 0x0006
+    {"RAUMSOLLTEMP_III",           FREQ_10MIN, cm_manager},  // 0x0007
+    {"RAUMSOLLTEMP_NACHT",         FREQ_1MIN,  cm_manager},  // 0x0008
+    {"EINSTELL_SPEICHERSOLLTEMP",  FREQ_30S,   cm_manager},  // 0x0013
+    {"ANTILEGIONELLEN",            FREQ_10MIN, cm_manager},  // 0x0101
+    {"HEIZKURVE",                  FREQ_1MIN,  cm_manager},  // 0x010e
+    {"QUELLENSOLLTEMPERATUR",      FREQ_10MIN, cm_manager},  // 0x01b0
+    {"WW_ECO",                     FREQ_10MIN, cm_manager},  // 0x027e
+    {"FATAL_ERROR",                FREQ_1MIN,  cm_manager},  // 0x080e
+    {"EINSTELL_SPEICHERSOLLTEMP2", FREQ_30S,   cm_manager},  // 0x0a06
+    {"ZWEITER_WE_STATUS",          FREQ_1MIN,  cm_manager},  // 0xfdab
+    {"WP_EVU",                     FREQ_1MIN,  cm_manager},  // 0xfdac
+
+    // ========================================================================
+    // BEDIENMODUL_2 (0x301): Room & Flow Setpoint Entities (if present)
+    // ========================================================================
     {"RAUMISTTEMP",                FREQ_1MIN,  cm_bedienmodul_2},
     {"VERSTELLTE_RAUMSOLLTEMP",    FREQ_1MIN,  cm_bedienmodul_2},
     {"VORLAUFSOLLTEMP",            FREQ_1MIN,  cm_bedienmodul_2},
     {"RAUMFEUCHTE",                FREQ_10MIN, cm_bedienmodul_2},
-    {"RAUMEINFLUSS",               FREQ_10MIN, cm_bedienmodul_2},  // TTF07c expects et_little_endian (row has et_default) — unverified
 };
 
 extern const size_t SIGNAL_REQUEST_COUNT_VALUE = sizeof(signalRequests) / sizeof(SignalRequest);
